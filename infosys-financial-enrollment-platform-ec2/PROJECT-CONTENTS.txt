@@ -1,0 +1,12 @@
+Complete project contents:
+- Seven Spring Boot microservices
+- PostgreSQL persistence for enrollment records
+- Redis cache/status implementation
+- Dockerfiles and Docker Compose
+- Kubernetes namespace/config/secret/PostgreSQL/Redis/application manifests
+- Terraform EC2 lab infrastructure
+- Jenkins pipeline
+- EC2 Amazon Linux 2023 installation script
+- Build/run/stop scripts
+- Postman collection
+- End-to-end implementation and interview notes

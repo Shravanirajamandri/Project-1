@@ -1,0 +1,158 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: financial-postgres
+    environment:
+      POSTGRES_DB: financial_enrollment
+      POSTGRES_USER: financial_user
+      POSTGRES_PASSWORD: financial_pass
+    ports: ["5432:5432"]
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U financial_user -d financial_enrollment"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+    container_name: financial-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  account-ingestion-service:
+    build: ./services/account-ingestion-service
+    container_name: account-ingestion-service
+    environment:
+      SERVER_PORT: "8081"
+      VALIDATION_URL: http://data-validation-service:8082
+      ELIGIBILITY_URL: http://customer-eligibility-service:8083
+      SEGMENTATION_URL: http://account-segmentation-service:8084
+      ENROLLMENT_URL: http://enrollment-service:8085
+      TRANSFORMATION_URL: http://data-transformation-service:8086
+      NOTIFICATION_URL: http://transaction-notification-service:8087
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    ports: ["8081:8081"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  data-validation-service:
+    build: ./services/data-validation-service
+    container_name: data-validation-service
+    environment:
+      SERVER_PORT: "8082"
+      VALIDATION_URL: http://data-validation-service:8082
+      ELIGIBILITY_URL: http://customer-eligibility-service:8083
+      SEGMENTATION_URL: http://account-segmentation-service:8084
+      ENROLLMENT_URL: http://enrollment-service:8085
+      TRANSFORMATION_URL: http://data-transformation-service:8086
+      NOTIFICATION_URL: http://transaction-notification-service:8087
+    ports: ["8082:8082"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  customer-eligibility-service:
+    build: ./services/customer-eligibility-service
+    container_name: customer-eligibility-service
+    environment:
+      SERVER_PORT: "8083"
+      VALIDATION_URL: http://data-validation-service:8082
+      ELIGIBILITY_URL: http://customer-eligibility-service:8083
+      SEGMENTATION_URL: http://account-segmentation-service:8084
+      ENROLLMENT_URL: http://enrollment-service:8085
+      TRANSFORMATION_URL: http://data-transformation-service:8086
+      NOTIFICATION_URL: http://transaction-notification-service:8087
+    ports: ["8083:8083"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  account-segmentation-service:
+    build: ./services/account-segmentation-service
+    container_name: account-segmentation-service
+    environment:
+      SERVER_PORT: "8084"
+      VALIDATION_URL: http://data-validation-service:8082
+      ELIGIBILITY_URL: http://customer-eligibility-service:8083
+      SEGMENTATION_URL: http://account-segmentation-service:8084
+      ENROLLMENT_URL: http://enrollment-service:8085
+      TRANSFORMATION_URL: http://data-transformation-service:8086
+      NOTIFICATION_URL: http://transaction-notification-service:8087
+    ports: ["8084:8084"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  enrollment-service:
+    build: ./services/enrollment-service
+    container_name: enrollment-service
+    environment:
+      SERVER_PORT: "8085"
+      VALIDATION_URL: http://data-validation-service:8082
+      ELIGIBILITY_URL: http://customer-eligibility-service:8083
+      SEGMENTATION_URL: http://account-segmentation-service:8084
+      ENROLLMENT_URL: http://enrollment-service:8085
+      TRANSFORMATION_URL: http://data-transformation-service:8086
+      NOTIFICATION_URL: http://transaction-notification-service:8087
+      DB_URL: jdbc:postgresql://postgres:5432/financial_enrollment
+      DB_USERNAME: financial_user
+      DB_PASSWORD: financial_pass
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    ports: ["8085:8085"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  data-transformation-service:
+    build: ./services/data-transformation-service
+    container_name: data-transformation-service
+    environment:
+      SERVER_PORT: "8086"
+      VALIDATION_URL: http://data-validation-service:8082
+      ELIGIBILITY_URL: http://customer-eligibility-service:8083
+      SEGMENTATION_URL: http://account-segmentation-service:8084
+      ENROLLMENT_URL: http://enrollment-service:8085
+      TRANSFORMATION_URL: http://data-transformation-service:8086
+      NOTIFICATION_URL: http://transaction-notification-service:8087
+    ports: ["8086:8086"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  transaction-notification-service:
+    build: ./services/transaction-notification-service
+    container_name: transaction-notification-service
+    environment:
+      SERVER_PORT: "8087"
+      VALIDATION_URL: http://data-validation-service:8082
+      ELIGIBILITY_URL: http://customer-eligibility-service:8083
+      SEGMENTATION_URL: http://account-segmentation-service:8084
+      ENROLLMENT_URL: http://enrollment-service:8085
+      TRANSFORMATION_URL: http://data-transformation-service:8086
+      NOTIFICATION_URL: http://transaction-notification-service:8087
+    ports: ["8087:8087"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:

@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS enrollments (
+  id BIGSERIAL PRIMARY KEY,
+  processing_id VARCHAR(40) UNIQUE NOT NULL,
+  customer_id VARCHAR(100) NOT NULL,
+  account_id VARCHAR(100) NOT NULL,
+  current_tier VARCHAR(20),
+  new_tier VARCHAR(20) NOT NULL,
+  action VARCHAR(30) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_enrollments_customer ON enrollments(customer_id);

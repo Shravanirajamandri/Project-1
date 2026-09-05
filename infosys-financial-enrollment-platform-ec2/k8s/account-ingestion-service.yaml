@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: account-ingestion-service, namespace: financial-platform}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: account-ingestion-service}}
+  template:
+    metadata: {labels: {app: account-ingestion-service}}
+    spec:
+      containers:
+      - name: account-ingestion-service
+        image: REPLACE_ECR_IMAGE/account-ingestion-service:1.0.0
+        ports: [{containerPort: 8081}]
+        env:
+        - name: SERVER_PORT
+          value: "8081"
+        - name: VALIDATION_URL
+          value: http://data-validation-service:8082
+        - name: ELIGIBILITY_URL
+          value: http://customer-eligibility-service:8083
+        - name: SEGMENTATION_URL
+          value: http://account-segmentation-service:8084
+        - name: ENROLLMENT_URL
+          value: http://enrollment-service:8085
+        - name: TRANSFORMATION_URL
+          value: http://data-transformation-service:8086
+        - name: NOTIFICATION_URL
+          value: http://transaction-notification-service:8087
+        - name: REDIS_HOST
+          valueFrom: {configMapKeyRef: {name: financial-config, key: REDIS_HOST}}
+        - name: REDIS_PORT
+          valueFrom: {configMapKeyRef: {name: financial-config, key: REDIS_PORT}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: account-ingestion-service, namespace: financial-platform}
+spec:
+  selector: {app: account-ingestion-service}
+  ports: [{port: 8081, targetPort: 8081}]

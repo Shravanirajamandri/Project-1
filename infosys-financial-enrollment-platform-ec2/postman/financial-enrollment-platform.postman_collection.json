@@ -1,0 +1,14 @@
+{
+ "info":{"name":"Financial Enrollment Platform","schema":"https://schema.getpostman.com/json/collection/v2.1.0/collection.json"},
+ "variable":[{"key":"baseUrl","value":"http://localhost:8081"},{"key":"processingId","value":""}],
+ "item":[
+  {"name":"1 - Ingest Account","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"customerId\": \"CUST1001\",\n  \"accountId\": \"ACC5001\",\n  \"accountType\": \"Investment\",\n  \"status\": \"OPEN\",\n  \"assetValue\": 500000,\n  \"currentTier\": \"GOLD\"\n}"},"url":{"raw":"{{baseUrl}}/api/accounts","host":["{{baseUrl}}"],"path":["api","accounts"]}}},
+  {"name":"2 - Validation","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"customerId\": \"CUST1001\",\n  \"accountId\": \"ACC5001\",\n  \"accountType\": \"Investment\",\n  \"status\": \"OPEN\",\n  \"assetValue\": 500000\n}"},"url":{"raw":"http://{{host}}:8082/api/validate","host":["http://{{host}}:8082"],"path":["api","validate"]}}},
+  {"name":"3 - Eligibility","request":{"method":"POST","body":{"mode":"raw","raw":"{\n  \"status\": \"OPEN\",\n  \"assetValue\": 500000\n}"},"url":{"raw":"http://{{host}}:8083/api/eligibility","host":["http://{{host}}:8083"],"path":["api","eligibility"]}}},
+  {"name":"4 - Segmentation","request":{"method":"POST","body":{"mode":"raw","raw":"{\n  \"assetValue\": 500000\n}"},"url":{"raw":"http://{{host}}:8084/api/segment","host":["http://{{host}}:8084"],"path":["api","segment"]}}},
+  {"name":"5 - Enrollment","request":{"method":"POST","body":{"mode":"raw","raw":"{\n  \"processingId\": \"PROC-12345678\",\n  \"customerId\": \"CUST1001\",\n  \"accountId\": \"ACC5001\",\n  \"currentTier\": \"GOLD\",\n  \"newTier\": \"PLAT\"\n}"},"url":{"raw":"http://{{host}}:8085/api/enrollments","host":["http://{{host}}:8085"],"path":["api","enrollments"]}}},
+  {"name":"6 - Transformation","request":{"method":"POST","body":{"mode":"raw","raw":"{\n  \"newTier\": \"PLAT\"\n}"},"url":{"raw":"http://{{host}}:8086/api/transform","host":["http://{{host}}:8086"],"path":["api","transform"]}}},
+  {"name":"7 - Notification","request":{"method":"POST","body":{"mode":"raw","raw":"{\n  \"processingId\": \"PROC-12345678\"\n}"},"url":{"raw":"http://{{host}}:8087/api/notify","host":["http://{{host}}:8087"],"path":["api","notify"]}}},
+  {"name":"8 - Ingestion Status","request":{"method":"GET","url":{"raw":"{{baseUrl}}/api/accounts/{{processingId}}/status","host":["{{baseUrl}}"],"path":["api","accounts","{{processingId}}","status"]}}}
+ ]
+}

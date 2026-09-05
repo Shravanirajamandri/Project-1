@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: account-segmentation-service, namespace: financial-platform}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: account-segmentation-service}}
+  template:
+    metadata: {labels: {app: account-segmentation-service}}
+    spec:
+      containers:
+      - name: account-segmentation-service
+        image: REPLACE_ECR_IMAGE/account-segmentation-service:1.0.0
+        ports: [{containerPort: 8084}]
+        env:
+        - name: SERVER_PORT
+          value: "8084"
+        - name: VALIDATION_URL
+          value: http://data-validation-service:8082
+        - name: ELIGIBILITY_URL
+          value: http://customer-eligibility-service:8083
+        - name: SEGMENTATION_URL
+          value: http://account-segmentation-service:8084
+        - name: ENROLLMENT_URL
+          value: http://enrollment-service:8085
+        - name: TRANSFORMATION_URL
+          value: http://data-transformation-service:8086
+        - name: NOTIFICATION_URL
+          value: http://transaction-notification-service:8087
+---
+apiVersion: v1
+kind: Service
+metadata: {name: account-segmentation-service, namespace: financial-platform}
+spec:
+  selector: {app: account-segmentation-service}
+  ports: [{port: 8084, targetPort: 8084}]

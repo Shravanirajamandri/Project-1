@@ -1,0 +1,5 @@
+data "aws_vpc" "default" { default = true }
+data "aws_subnets" "default" { filter { name = "vpc-id" values = [data.aws_vpc.default.id] } }
+data "aws_ami" "al2023" { most_recent = true owners = ["137112412989"] filter { name = "name" values = ["al2023-ami-2023.*-x86_64"] } filter { name = "state" values = ["available"] } }
+resource "aws_security_group" "lab" { name = "${var.project_name}-sg" vpc_id = data.aws_vpc.default.id ingress { from_port=22 to_port=22 protocol="tcp" cidr_blocks=["0.0.0.0/0"] } dynamic "ingress" { for_each = toset([8081,8082,8083,8084,8085,8086,8087,5432,6379]) content { from_port=ingress.value to_port=ingress.value protocol="tcp" cidr_blocks=["0.0.0.0/0"] } } egress { from_port=0 to_port=0 protocol="-1" cidr_blocks=["0.0.0.0/0"] } }
+resource "aws_instance" "lab" { ami=data.aws_ami.al2023.id instance_type=var.instance_type subnet_id=data.aws_subnets.default.ids[0] key_name=var.key_name vpc_security_group_ids=[aws_security_group.lab.id] tags={Name=var.project_name} }

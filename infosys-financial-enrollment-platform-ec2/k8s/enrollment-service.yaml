@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: enrollment-service, namespace: financial-platform}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: enrollment-service}}
+  template:
+    metadata: {labels: {app: enrollment-service}}
+    spec:
+      containers:
+      - name: enrollment-service
+        image: REPLACE_ECR_IMAGE/enrollment-service:1.0.0
+        ports: [{containerPort: 8085}]
+        env:
+        - name: SERVER_PORT
+          value: "8085"
+        - name: VALIDATION_URL
+          value: http://data-validation-service:8082
+        - name: ELIGIBILITY_URL
+          value: http://customer-eligibility-service:8083
+        - name: SEGMENTATION_URL
+          value: http://account-segmentation-service:8084
+        - name: ENROLLMENT_URL
+          value: http://enrollment-service:8085
+        - name: TRANSFORMATION_URL
+          value: http://data-transformation-service:8086
+        - name: NOTIFICATION_URL
+          value: http://transaction-notification-service:8087
+        - name: REDIS_HOST
+          valueFrom: {configMapKeyRef: {name: financial-config, key: REDIS_HOST}}
+        - name: REDIS_PORT
+          valueFrom: {configMapKeyRef: {name: financial-config, key: REDIS_PORT}}
+        - name: DB_URL
+          valueFrom: {configMapKeyRef: {name: financial-config, key: DB_URL}}
+        - name: DB_USERNAME
+          valueFrom: {configMapKeyRef: {name: financial-config, key: DB_USERNAME}}
+        - name: DB_PASSWORD
+          valueFrom: {secretKeyRef: {name: financial-secret, key: DB_PASSWORD}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: enrollment-service, namespace: financial-platform}
+spec:
+  selector: {app: enrollment-service}
+  ports: [{port: 8085, targetPort: 8085}]
